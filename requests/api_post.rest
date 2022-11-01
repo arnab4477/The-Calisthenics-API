@@ -1,0 +1,32 @@
+POST http://localhost:7000/v1/movements
+Content-Type: application/json
+
+
+            {
+                "id": 2,
+                "name": "Pull up",
+                "description": "Pull up is an essential basic vertical pulling movement",
+                "image": "https://i.ytimg.com/vi/HRV5YKKaeVw/maxresdefault.jpg",
+                "tutorials": [
+                        "https://www.youtube.com/watch?v=Y3ntNsIS2Q8",
+                        "https://www.gymnasticbodies.com/your-perfect-pull-up/"
+                ],
+                "skilltype": [
+                        "basics",
+                        "strength",
+                        "hypertrophy"
+                ],
+                "muscles": [
+                        "lats",
+                        "biceps",
+                        "forearms"
+                ],
+                "difficulty": "Beginner",
+                "equipments": [
+                        "pull up bar",
+                        "gymnastics rings"
+                ],
+                "prerequisite": null,
+                "version": 1
+            }
+        

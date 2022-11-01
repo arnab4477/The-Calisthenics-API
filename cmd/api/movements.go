@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,7 +17,29 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	fmt.Fprintln(w, "Create a new movement")
+	//Create a struct to hold the input
+	var input struct {
+		Name string `json:"name"`
+		Description string `json:"description"`
+		Image string `json:"image"`
+		Tutorials []string `json:"tutorials"` 
+		Skilltype []string `json:"skilltype"`
+		Muscles []string `json:"muscles"`
+		Difficulty string `json:"difficulty"` 
+		Equipments []string `json:"equipments"`
+		Prerequisite []string `json:"prerequisite"` 
+	}
+
+	// Decode the response body from JSON to a native Go object
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		app.logError(r, err)
+		app.writeError(w, r, http.StatusBadRequest, err.Error())
+
+	}
+	
+	// Print the input
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 // Handler method on the app instance for the GET /movements/:id endpount
