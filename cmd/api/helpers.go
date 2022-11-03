@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -55,9 +56,17 @@ func (app *application) writeJSON(w http.ResponseWriter, data envelope, status i
 }
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInput interface{}) error {
+	// Set the max siz of the input
+	maxBytes := 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+
+	// Initialize the JSON decoder and restricting unknown fields
+	// This lines and the subsequest error codes need to be deleted if unknown fields are to be allowed
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
 
 	// Decode the response body from JSON to a native Go object
-	err := json.NewDecoder(r.Body).Decode(jsonInput)
+	err := decoder.Decode(jsonInput)
 	if err != nil {
 		// Declare variables for potential error types
 		var syntaxError *json.SyntaxError
@@ -80,6 +89,14 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInp
 				return fmt.Errorf("body contains incorrect JSON types for field at %q", unmarshalTypeError.Field)
 			}
 			return fmt.Errorf("body contains badly formed JSON (at charater %d)", unmarshalTypeError.Offset)
+		
+		// This case is to be deleted to allow unknown fields
+		case strings.HasPrefix(err.Error(), "json: unknown field "):
+			unknownKey := strings.TrimPrefix(err.Error(), "json: unknown field ")
+			return fmt.Errorf("body contains unknown key %s", unknownKey)
+
+		case err.Error() == "http: request body too large":
+			return fmt.Errorf("request body cannot be larger than %d bytes", maxBytes)
 			
 		case errors.As(err, &InvalidUnmarshalError):
 			panic(err)
@@ -89,6 +106,16 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInp
 		}
 
 	}
+
+	// Check that the body only contains only one JSON value in the request body
+	// This is needed because json.Decode() checks only one value at a time
+	// This can also be deleted if multiple values are to be allowed
+	// But generally it should not be and only one value per request body is to be preffered
+	err = decoder.Decode(&struct{}{})
+	if err != io.EOF {
+		return errors.New("body must contain a single JSON value")
+	}
+
 	return nil
 }
 	
