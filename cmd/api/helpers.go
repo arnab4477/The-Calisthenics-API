@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -49,6 +51,44 @@ func (app *application) writeJSON(w http.ResponseWriter, data envelope, status i
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write([]byte(json))
+	return nil
+}
+
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInput interface{}) error {
+
+	// Decode the response body from JSON to a native Go object
+	err := json.NewDecoder(r.Body).Decode(jsonInput)
+	if err != nil {
+		// Declare variables for potential error types
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+		var InvalidUnmarshalError *json.InvalidUnmarshalError
+
+		// Create a switch-case and return the appropriate error message
+		switch {
+		case errors.Is(err, io.EOF):
+			return fmt.Errorf("body must not be empty")
+
+		case errors.Is(err, io.ErrUnexpectedEOF):
+			return errors.New("body contains badly formed JSON")
+			
+		case errors.As(err, &syntaxError):
+			return fmt.Errorf("body contains badly formed JSON (at charater %d)", syntaxError.Offset)
+			
+		case errors.As(err, &unmarshalTypeError):
+			if unmarshalTypeError.Field != "" {
+				return fmt.Errorf("body contains incorrect JSON types for field at %q", unmarshalTypeError.Field)
+			}
+			return fmt.Errorf("body contains badly formed JSON (at charater %d)", unmarshalTypeError.Offset)
+			
+		case errors.As(err, &InvalidUnmarshalError):
+			panic(err)
+
+		default:
+			return err
+		}
+
+	}
 	return nil
 }
 	

@@ -45,3 +45,7 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request)
 	// Send the response as JSON
 	app.writeError(w, r, http.StatusNotFound, message)
 }
+// Handler that sends an error response in the case of a Bad Request
+func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.writeError(w, r, http.StatusBadRequest, err.Error())
+}

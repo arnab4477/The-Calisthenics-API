@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -30,12 +29,11 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		Prerequisite []string `json:"prerequisite"` 
 	}
 
-	// Decode the response body from JSON to a native Go object
-	err := json.NewDecoder(r.Body).Decode(&input)
+	// Decode the JSON request and send an appropriate response in case of an error
+	err := app.readJSON(w, r, &input)
 	if err != nil {
-		app.logError(r, err)
-		app.writeError(w, r, http.StatusBadRequest, err.Error())
-
+		app.badRequestResponse(w, r, err)
+		return
 	}
 	
 	// Print the input
