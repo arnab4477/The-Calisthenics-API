@@ -49,3 +49,8 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request)
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.writeError(w, r, http.StatusBadRequest, err.Error())
 }
+
+// Handler that sends an error response in the case of an failed validation error
+func (app *application) failedValidationError(w http.ResponseWriter, r *http.Request, errors map[string]string){
+	app.writeError(w, r, http.StatusUnprocessableEntity, errors)
+}

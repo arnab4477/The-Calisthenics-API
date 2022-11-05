@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/data"
+	"github.com/arnab4477/Parkour_API/internal/validator"
 )
 
 // Handler method on the app instance for the POST /movements endpount
@@ -35,7 +36,31 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	
+
+	// Create a new movement instance with the input data
+	movement := &data.Movement{
+		Name: input.Name,
+		Description: input.Description,
+		Image: input.Image,
+		Tutorials: input.Tutorials,
+		Skilltype: input.Skilltype,
+		Muscles: input.Muscles,
+		Difficulty: input.Difficulty,
+		Equipments: input.Equipments,
+		Prerequisite: input.Prerequisite,
+	}
+
+	// Initiate a new Validator instance
+	v := validator.NewValidator()
+
+
+	// If there are no errors then proceed
+	// Else senf error response back
+	if data.ValidateMovement(v, movement); !v.NoErrors() {
+		app.failedValidationError(w, r, v.Errors)
+		return
+	}
+
 	// Print the input
 	fmt.Fprintf(w, "%+v\n", input)
 }
