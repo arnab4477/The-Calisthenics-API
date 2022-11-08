@@ -21,6 +21,9 @@ type config struct {
 	env string
 	db struct{
 		dsn string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdletime string
 	}
 }
 
@@ -40,6 +43,9 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 7000, "The API port")
 	flag.StringVar(&cfg.env, "env", "development", "Enviroment (development | staging | production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PARKOUR_DB_DSN"), "PostgreSQL DSN")
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connetions")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connetions")
+	flag.StringVar(&cfg.db.maxIdletime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 	flag.Parse()
 
 	// Logger function for customized logging
@@ -84,6 +90,19 @@ func openDB(cfg config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// SEt the configuration settings for the connections from the flags
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+
+	// Create a Go time object from the vlue passed as maxIdleTime
+	// Set the value to the appropriate settings
+	duration, err := time.ParseDuration(cfg.db.maxIdletime)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxIdleTime(duration)
 
 	// Create a context with 5 second time out
 	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
