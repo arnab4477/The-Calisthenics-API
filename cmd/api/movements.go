@@ -7,10 +7,11 @@ import (
 
 	"github.com/arnab4477/Parkour_API/internal/data"
 	"github.com/arnab4477/Parkour_API/internal/validator"
+	"github.com/julienschmidt/httprouter"
 )
 
 // Handler method on the app instance for the POST /movements endpount
-func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
 	// Send an appropriate error response if the medthod is not POST
 	if r.Method != http.MethodPost {
 		app.methodNotAllowedResponse(w, r)
@@ -66,7 +67,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 }
 
 // Handler method on the app instance for the GET /movements/:id endpount
-func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
 
 	// Get the id parameter
 	id, err := app.readIDParam(r)

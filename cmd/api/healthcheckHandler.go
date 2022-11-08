@@ -2,11 +2,13 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 // Handler that responds with application status, operating enviroment
 // and version in json format. Created on the app instance
-func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
 
 	// Create an envelop instance containing the system information
 	env := map[string]string{

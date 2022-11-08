@@ -17,9 +17,10 @@ func (app *application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	// Register the handlers for the endpoints with speific methods
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/movements", app.createMovementHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/movements/:id", app.showMovementHandler)
+	router.GET("/v1/healthcheck", app.healthcheckHandler)
+	router.POST("/v1/movements", app.createMovementHandler)
+	router.GET("/v1/movements/:id", app.showMovementHandler)
+
 
 	return router
 }
