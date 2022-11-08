@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/validator"
@@ -45,5 +46,26 @@ func ValidateMovement(v *validator.Validator, input *Movement) {
 	v.Check(!validator.IsUnique(input.Equipments), "equipment", "must not contain duplicate values")
 	v.Check(!validator.IsUnique(input.Muscles), "muscles", "must not contain duplicate values")
 	v.Check(!validator.IsUnique(input.Prerequisite), "prerequisites", "must not contain duplicate values")
+}
 
+// Define a MovementModel struct which warps a SQL connectopn pool
+type MovementModel struct {
+	DB *sql.DB
+}
+
+// Method for inserting a new movement to the movement table
+func (m MovementModel) Insert(movement *Movement) error {
+	return nil
+}
+// Method for getting a new movement to the movement table
+func (m MovementModel) Get(id int64) (*Movement, error) {
+	return nil, nil
+}
+// Method for updating a new movement to the movement table
+func (m MovementModel) Update(movement *Movement) error {
+	return nil
+}
+// Method for deleting a new movement to the movement table
+func (m MovementModel) Delete(id int64) error {
+	return nil
 }
