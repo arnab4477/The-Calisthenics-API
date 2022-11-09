@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/data"
 	"github.com/arnab4477/Parkour_API/internal/validator"
@@ -28,7 +28,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		Muscles []string `json:"muscles"`
 		Difficulty string `json:"difficulty"` 
 		Equipments []string `json:"equipments"`
-		Prerequisite []string `json:"prerequisite"` 
+		Prerequisites []string `json:"prerequisite"` 
 	}
 
 	// Decode the JSON request and send an appropriate response in case of an error
@@ -48,7 +48,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		Muscles: input.Muscles,
 		Difficulty: input.Difficulty,
 		Equipments: input.Equipments,
-		Prerequisite: input.Prerequisite,
+		Prerequisites: input.Prerequisites,
 	}
 
 	// Initiate a new Validator instance
@@ -62,41 +62,49 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Print the input
-	fmt.Fprintf(w, "%+v\n", input)
+	// Call the insert method on the movement model passing in the validated movement struct
+	// This will create a new record in the Movements table in the database
+	err = app.models.Movements.InsertMovement(movement)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Creating a location header to let the client know where they can find the newly created information
+	header := make(http.Header)
+	header.Set("Location", fmt.Sprintf("v1/movements/%d", movement.ID))
+
+	// Send a response with the appropriate status code (201), the movement data and the header
+	err = app.writeJSON(w, envelope{"movement": movement}, http.StatusCreated, header)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 // Handler method on the app instance for the GET /movements/:id endpount
-func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
+func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Get the id parameter
-	id, err := app.readIDParam(r)
+	id, err := app.readIDParam(ps)
 	if err != nil || id < 1 {
 		app.logError(r, err)
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	// This is to be used to get the time of UTC instead of local
-	utc, _ := time.LoadLocation("UTC")
-
-	// Create a dummy instance of a movement struct
-	movement := data.Movement {
-		ID: id,
-		CreatedAt: time.Now().In(utc),
-		Name: "Pull up",
-		Description: "Pull up is an essential basic vertical pulling movement",
-		Image: "https://i.ytimg.com/vi/HRV5YKKaeVw/maxresdefault.jpg",
-		Tutorials: []string{"https://www.youtube.com/watch?v=Y3ntNsIS2Q8", "https://www.gymnasticbodies.com/your-perfect-pull-up/"},
-		Skilltype: []string{"basics", "strength", "hypertrophy"},
-		Muscles: []string{"lats", "biceps", "forearms"},
-		Difficulty: "Beginner",
-		Equipments: []string{"pull up bar", "gymnastics rings"},
-		Prerequisite: nil,
-		Version: 1,
+	// Fetch data for a specific movement
+	movement, err := app.models.Movements.GetMovement(id)
+	if err != nil {
+		if errors.Is(err, data.ErrNotFound) {
+			app.notFoundResponse(w, r)
+			return
+		} else {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
 	}
 
-	// Convert the struct to JSON and add that to the response body
+	// Send response with the movement data
 	err = app.writeJSON(w, envelope{"movement": movement}, http.StatusOK, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

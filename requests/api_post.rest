@@ -2,12 +2,12 @@ POST http://localhost:7000/v1/movements
 Content-Type: application/json
 
 {
-        "name": "Pull up",
-    "description": "Pull up is an essential basic vertical pulling movement",
-    "image": "https://i.ytimg.com/vi/HRV5YKKaeVw/maxresdefault.jpg",
+    "name": "Push up",
+    "description": "Push up is an essential basic horizontal pushing movement",
+    "image": "https://manofmany.com/wp-content/uploads/2020/02/How-to-do-a-proper-pushup.jpg",
     "tutorials": [
-      "https://www.youtube.com/watch?v=Y3ntNsIS2Q8",
-      "https://www.gymnasticbodies.com/your-perfect-pull-up/"
+      "https://www.youtube.com/watch?v=IODxDxX7oi4",
+      "https://barbend.com/push-up-variations/"
     ],
     "skilltype": [
       "basics",
@@ -15,13 +15,13 @@ Content-Type: application/json
       "hypertrophy"
     ],
     "muscles": [
-      "lats",
+      "chest",
       "biceps",
-      "forearms"
+      "shoulders"
     ],
     "difficulty": "Beginner",
     "equipments": [
-      "pull up bar",
+      "floor/ground",
       "gymnastics rings"
     ],
     "prerequisite": null

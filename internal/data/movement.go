@@ -2,9 +2,11 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/validator"
+	"github.com/lib/pq"
 )
 
 // Declare the movement struct and the JSON alternative keys
@@ -19,7 +21,7 @@ type Movement struct {
 	Muscles []string `json:"muscles"`
 	Difficulty string `json:"difficulty"` // Beginner, Intermediate or Advance
 	Equipments []string `json:"equipments"`
-	Prerequisite []string `json:"prerequisite"`
+	Prerequisites []string `json:"prerequisite"`
 	Version int32 `json:"version"` // Version will start at 1 and will be incremented each time the struct is updated
 }
 
@@ -45,7 +47,7 @@ func ValidateMovement(v *validator.Validator, input *Movement) {
 	v.Check(!validator.IsUnique(input.Skilltype), "skilltype", "must not contain duplicate values")
 	v.Check(!validator.IsUnique(input.Equipments), "equipment", "must not contain duplicate values")
 	v.Check(!validator.IsUnique(input.Muscles), "muscles", "must not contain duplicate values")
-	v.Check(!validator.IsUnique(input.Prerequisite), "prerequisites", "must not contain duplicate values")
+	v.Check(!validator.IsUnique(input.Prerequisites), "prerequisites", "must not contain duplicate values")
 }
 
 // Define a MovementModel struct which warps a SQL connectopn pool
@@ -54,13 +56,68 @@ type MovementModel struct {
 }
 
 // Method for inserting a new movement to the movement table
-func (m MovementModel) Insert(movement *Movement) error {
-	return nil
+func (m MovementModel) InsertMovement(movement *Movement) error {
+	// SQL query for inserting new record to the Movements table
+	// And returning system generated data
+	query := 
+		`INSERT INTO movements (name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		 RETURNING id, createdAt, version`
+
+	// Args slice that holds the values for the placeholders in the SQL query
+	// These values are from the movement struct
+	args := 
+		[]interface{}{movement.Name, movement.Description, movement.Image, pq.Array(movement.Tutorials), pq.Array(movement.Skilltype), pq.Array(movement.Muscles), movement.Difficulty, pq.Array(movement.Equipments), pq.Array(movement.Prerequisites)}
+	
+	// Execute and return the QueryRow() method wuth the query and the args slice as parameters
+	// The Scan() method is used to return the system generated values
+	
+	return m.DB.QueryRow(query, args...).Scan(&movement.ID, &movement.CreatedAt, &movement.Version)
 }
 // Method for getting a new movement to the movement table
-func (m MovementModel) Get(id int64) (*Movement, error) {
-	return nil, nil
+func (m MovementModel) GetMovement(id int64) (*Movement, error) {
+	if id < 1 {
+		return nil, ErrNotFound
+	}
+
+	// The query to fetch data of a specific movement
+	query := 
+		`SELECT id, name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite, version
+		 FROM movements
+		 WHERE id = $1`
+
+	// Struct to hold the data returned from the query
+	var movement Movement
+
+	// Execute the query and passing in the id parameter
+	// Scan the response data into the fields of the movement struct
+	err := m.DB.QueryRow(query, id).Scan(
+		&movement.ID,
+		&movement.Name,
+		&movement.Description,
+		&movement.Image,
+		pq.Array(&movement.Tutorials),
+		pq.Array(&movement.Skilltype),
+		pq.Array(&movement.Muscles),
+		&movement.Difficulty,
+		pq.Array(&movement.Equipments),
+		pq.Array(&movement.Prerequisites),
+		&movement.Version,
+	)
+
+	// Check if the there is any error regarding the query
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		} else {
+			return nil, err
+		}
+	}
+
+	// Return a pointer to the movement struct
+	return &movement, nil
 }
+
 // Method for updating a new movement to the movement table
 func (m MovementModel) Update(movement *Movement) error {
 	return nil

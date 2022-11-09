@@ -13,14 +13,11 @@ import (
 )
 
 // Method on the app instance to retrieve the id parameter
-func (app *application) readIDParam(r *http.Request) (int64, error) {
-
-	// Get the list of params
-	params := httprouter.ParamsFromContext(r.Context())
+func (app *application) readIDParam(ps httprouter.Params) (int64, error) {
 
 	// Get the id parameter and make sure it is a positive integer
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 0 {
+	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
+	if err != nil {
 		return 0, errors.New("invalid id parameter")
 	}
 
