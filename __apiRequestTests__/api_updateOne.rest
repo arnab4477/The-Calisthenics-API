@@ -1,0 +1,30 @@
+PUT http://localhost:7000/v1/movements/2
+Content-Type: application/json
+
+{
+    "name": "Push up",
+    "description": "Push up is a fundamental basic horizontal pushing movement",
+    "image": "https://manofmany.com/wp-content/uploads/2020/02/How-to-do-a-proper-pushup.jpg",
+    "tutorials": [
+      "https://www.youtube.com/watch?v=IODxDxX7oi4",
+      "https://barbend.com/push-up-variations/"
+    ],
+    "skilltype": [
+      "basics",
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": [
+      "chest",
+      "biceps",
+      "shoulders"
+    ],
+    "difficulty": "Beginner",
+    "equipments": [
+      "floor/ground",
+      "gymnastics rings"
+    ],
+    "prerequisite": null
+}
+
+

@@ -89,7 +89,7 @@ func (m MovementModel) GetMovement(id int64) (*Movement, error) {
 	// Struct to hold the data returned from the query
 	var movement Movement
 
-	// Execute the query and passing in the id parameter
+	// Execute the query passing in the id parameter
 	// Scan the response data into the fields of the movement struct
 	err := m.DB.QueryRow(query, id).Scan(
 		&movement.ID,
@@ -119,8 +119,30 @@ func (m MovementModel) GetMovement(id int64) (*Movement, error) {
 }
 
 // Method for updating a new movement to the movement table
-func (m MovementModel) Update(movement *Movement) error {
-	return nil
+func (m MovementModel) UpdateMovement(movement *Movement) error {
+	// SQL query to update movements in the database
+	query := `
+		UPDATE movements
+		SET name = $1, description = $2, image = $3, tutorials = $4, skilltype = $5, muscles = $6, difficulty = $7, equipments = $8, prerequisite = $9, version = version + 1
+		WHERE id = $10
+		RETURNING version`
+
+	// Interface to hold all the placeholder values for the query
+	args := []interface{}{
+		movement.Name,
+		movement.Description,
+		movement.Image,
+		pq.Array(movement.Tutorials),
+		pq.Array(movement.Skilltype),
+		pq.Array(movement.Muscles),
+		movement.Difficulty,
+		pq.Array(movement.Equipments),
+		pq.Array(movement.Prerequisites),
+		movement.ID,
+	}
+
+	// Execute the QueryRow method to update the record and scan the version value to the struct 
+	return m.DB.QueryRow(query, args...).Scan(&movement.Version)
 }
 // Method for deleting a new movement to the movement table
 func (m MovementModel) Delete(id int64) error {

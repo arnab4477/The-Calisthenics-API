@@ -56,7 +56,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 
 
 	// If there are no errors then proceed
-	// Else senf error response back
+	// Else send error response back
 	if data.ValidateMovement(v, movement); !v.NoErrors() {
 		app.failedValidationError(w, r, v.Errors)
 		return
@@ -102,6 +102,85 @@ func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Reque
 			app.serverErrorResponse(w, r, err)
 			return
 		}
+	}
+
+	// Send response with the movement data
+	err = app.writeJSON(w, envelope{"movement": movement}, http.StatusOK, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+// Handler method on the app instance for the PUT /movements/:id endpount
+func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// Get the id parameter
+	id, err := app.readIDParam(ps)
+	if err != nil || id < 1 {
+		app.logError(r, err)
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	// Fetch data for a specific movement
+	movement, err := app.models.Movements.GetMovement(id)
+	if err != nil {
+		if errors.Is(err, data.ErrNotFound) {
+			app.notFoundResponse(w, r)
+			return
+		} else {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+	}
+
+	//Create a struct to hold the input
+	var input struct {
+		Name string `json:"name"`
+		Description string `json:"description"`
+		Image string `json:"image"`
+		Tutorials []string `json:"tutorials"` 
+		Skilltype []string `json:"skilltype"`
+		Muscles []string `json:"muscles"`
+		Difficulty string `json:"difficulty"` 
+		Equipments []string `json:"equipments"`
+		Prerequisites []string `json:"prerequisite"` 
+	}
+
+	// Decode the JSON request and send an appropriate response in case of an error
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Copy the request body to the appropriate fields of the movement record
+	movement.Name = input.Name
+	movement.Description = input.Description
+	movement.Image = input.Image
+	movement.Tutorials = input.Tutorials
+	movement.Skilltype = input.Skilltype
+	movement.Muscles = input.Muscles
+	movement.Difficulty = input.Difficulty
+	movement.Equipments = input.Equipments
+	movement.Prerequisites = input.Prerequisites
+
+	// Initiate a new Validator instance
+	v := validator.NewValidator()
+
+
+	// If there are no errors then proceed
+	// Else send error response back
+	if data.ValidateMovement(v, movement); !v.NoErrors() {
+		app.failedValidationError(w, r, v.Errors)
+		return
+	}
+
+	// Call the UpdateMovement method on the movement model passing in the validated movement struct
+	// This will update an existing record a record in the Movements table in the database
+	err = app.models.Movements.UpdateMovement(movement)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 	// Send response with the movement data
