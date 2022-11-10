@@ -8,6 +8,7 @@ import (
 // Error to return when a record (like a movement) is not found in the database using the Get() method
 var (
 	ErrNotFound = errors.New("record not found")
+	ErrEditConflict = errors.New("record not found")
 )
 
 // This Models struct all thee models in the database

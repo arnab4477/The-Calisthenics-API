@@ -59,10 +59,10 @@ type MovementModel struct {
 func (m MovementModel) InsertMovement(movement *Movement) error {
 	// SQL query for inserting new record to the Movements table
 	// And returning system generated data
-	query := 
-		`INSERT INTO movements (name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		 RETURNING id, createdAt, version`
+	query := `
+		INSERT INTO movements (name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, createdAt, version`
 
 	// Args slice that holds the values for the placeholders in the SQL query
 	// These values are from the movement struct
@@ -81,10 +81,10 @@ func (m MovementModel) GetMovement(id int64) (*Movement, error) {
 	}
 
 	// The query to fetch data of a specific movement
-	query := 
-		`SELECT id, name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite, version
-		 FROM movements
-		 WHERE id = $1`
+	query := `
+		SELECT id, name, description, image, tutorials, skilltype, muscles, difficulty, equipments, prerequisite, version
+		FROM movements
+		WHERE id = $1`
 
 	// Struct to hold the data returned from the query
 	var movement Movement
@@ -124,7 +124,7 @@ func (m MovementModel) UpdateMovement(movement *Movement) error {
 	query := `
 		UPDATE movements
 		SET name = $1, description = $2, image = $3, tutorials = $4, skilltype = $5, muscles = $6, difficulty = $7, equipments = $8, prerequisite = $9, version = version + 1
-		WHERE id = $10
+		WHERE id = $10 and verion = $11
 		RETURNING version`
 
 	// Interface to hold all the placeholder values for the query
@@ -139,10 +139,23 @@ func (m MovementModel) UpdateMovement(movement *Movement) error {
 		pq.Array(movement.Equipments),
 		pq.Array(movement.Prerequisites),
 		movement.ID,
+		movement.Version,
 	}
 
 	// Execute the QueryRow method to update the record and scan the version value to the struct 
-	return m.DB.QueryRow(query, args...).Scan(&movement.Version)
+	err := m.DB.QueryRow(query, args...).Scan(&movement.Version)
+	if err != nil {
+		// If no rows were affected that means there was an edit conflict
+		// Handling this error enables optimistic conurrency locking which avoids
+		// Such edit conflicts in the case of a data race
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrEditConflict
+		} else {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Method for deleting a new movement to the movement table

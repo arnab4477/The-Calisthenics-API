@@ -128,6 +128,8 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 		if errors.Is(err, data.ErrNotFound) {
 			app.notFoundResponse(w, r)
 			return
+		} else if errors.Is(err, data.ErrEditConflict) {
+			app.editConflictResponse(w, r)
 		} else {
 			app.serverErrorResponse(w, r, err)
 			return

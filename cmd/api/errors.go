@@ -21,29 +21,31 @@ func (app *application) writeError(w http.ResponseWriter, r *http.Request, statu
 
 // Handler that sends an error response in the case of an Internal Server Error
 func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.logError(r, err)
 
-	//Write an error message
+	// Write and send the appropriate error message
 	message := "the server encountered a problem and could not proceed with your request"
-
-	// Send the response as JSON
 	app.writeError(w, r, http.StatusInternalServerError, message)
 }
 // Handler that sends an error response in the case of the method not being allowed
 func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
-	//Write an error message
-	message := fmt.Sprintf("the %s method is not supported for this resource", r.Method)
 
-	// Send the response as JSON
+	// Write and send the appropriate error message
+	message := fmt.Sprintf("the %s method is not supported for this resource", r.Method)
 	app.writeError(w, r, http.StatusMethodNotAllowed, message)
 }
 // Handler that sends an error response in the case of a Resource Not Found Error
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
-	//Write an error message
-	message := "the resource could not be found"
 
-	// Send the response as JSON
+	// Write and send the appropriate error message
+	message := "the resource could not be found"
 	app.writeError(w, r, http.StatusNotFound, message)
+}
+// Handler that sends an error response in the case of a Edit Conflict Error
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+
+	// Write and send the appropriate error message
+	message := "unable to update the record due an edit conflict, please try again"
+	app.writeError(w, r, http.StatusConflict, message)
 }
 // Handler that sends an error response in the case of a Bad Request
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
