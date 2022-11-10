@@ -42,7 +42,7 @@ func main() {
 	var cfg config
 
 	// Set flags and their default values
-	flag.IntVar(&cfg.port, "port", 7000, "The API port")
+	flag.IntVar(&cfg.port, "port", 7001, "The API port")
 	flag.StringVar(&cfg.env, "env", "development", "Enviroment (development | staging | production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PARKOUR_DB_DSN"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connetions")

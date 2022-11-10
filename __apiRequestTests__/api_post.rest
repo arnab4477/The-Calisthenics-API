@@ -1,8 +1,8 @@
-POST http://localhost:7000/v1/movements
+POST http://localhost:7001/v1/movements
 Content-Type: application/json
 
 {
-    "name": "Push up",
+    "name": "test",
     "description": "Push up is an essential basic horizontal pushing movement",
     "image": "https://manofmany.com/wp-content/uploads/2020/02/How-to-do-a-proper-pushup.jpg",
     "tutorials": [

@@ -144,7 +144,33 @@ func (m MovementModel) UpdateMovement(movement *Movement) error {
 	// Execute the QueryRow method to update the record and scan the version value to the struct 
 	return m.DB.QueryRow(query, args...).Scan(&movement.Version)
 }
+
 // Method for deleting a new movement to the movement table
-func (m MovementModel) Delete(id int64) error {
+func (m MovementModel) DeleteMovement(id int64) error {
+
+	if id < 1 {
+		return ErrNotFound
+	}
+
+	// SQL query for deleting a specific movement
+	query := `
+		DELETE FROM movements
+		WHERE id = $1`
+	
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	// The RowsAffected() method returns the number if rows affected from the query
+	// If no rows were affected that means that no record was deleted
+	// Which means the no record with the given id exists
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	} else if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
 	return nil
 }

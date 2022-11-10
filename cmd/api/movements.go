@@ -110,6 +110,7 @@ func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
 // Handler method on the app instance for the PUT /movements/:id endpount
 func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -185,6 +186,36 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Send response with the movement data
 	err = app.writeJSON(w, envelope{"movement": movement}, http.StatusOK, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+// Handler method on the app instance for the DELETE /movements/:id endpount
+func (app *application) deleteMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// Get the id parameter
+	id, err := app.readIDParam(ps)
+	if err != nil || id < 1 {
+		app.logError(r, err)
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	//Delete the record from the database
+	err = app.models.Movements.DeleteMovement(id)
+	if err != nil {
+		if errors.Is(err, data.ErrNotFound) {
+			app.notFoundResponse(w, r)
+			return
+		} else {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+	}
+
+	// Send response about the success of deletion
+	err = app.writeJSON(w, envelope{"movement": "movement successfully deleted"}, http.StatusOK, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

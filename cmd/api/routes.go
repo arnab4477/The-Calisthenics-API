@@ -21,6 +21,7 @@ func (app *application) routes() *httprouter.Router {
 	router.POST("/v1/movements", app.createMovementHandler)
 	router.GET("/v1/movements/:id", app.showMovementHandler)
 	router.PUT("/v1/movements/:id", app.updateMovementHandler)
+	router.DELETE("/v1/movements/:id", app.deleteMovementHandler)
 
 
 	return router
