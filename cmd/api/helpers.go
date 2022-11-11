@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/arnab4477/Parkour_API/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -115,4 +117,48 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInp
 
 	return nil
 }
-	
+
+// Function that parses the url query and returns the strings
+func (app *application) readStrings(queries url.Values, key string, defaultValue string) string {
+
+	// Extract the values for a given key
+	// If no key is given then it returns "", in that case return the default value
+	values := queries.Get(key)
+	if values == "" {
+		return defaultValue
+	}
+
+	return values
+}
+// Function that parses the url query and returns the integers
+func (app *application) readInts(queries url.Values, key string, defaultValue int, v *validator.Validator) int {
+
+	// Extract the values for a given key
+	// If no key is given then it returns "", in that case return the default value
+	stringValues := queries.Get(key)
+	if stringValues == "" {
+		return defaultValue
+	}
+
+	// Convert the string values into an integer
+	// If it fails that means the client did not give an integer for the query parameter
+	intValues, err := strconv.Atoi(stringValues)
+	if err != nil {
+		v.AddError(key, "must be an integer")
+		return defaultValue
+	}
+
+	return intValues
+}
+// Function that parses the url query and returns the comma separated values
+func (app *application) readCsv(queries url.Values, key string, defaultValue []string) []string {
+
+	// Extract the values for a given key
+	// If no key is given then it returns "", in that case return the default value
+	stringValues := queries.Get(key)
+	if stringValues == "" {
+		return defaultValue
+	}
+
+	return strings.Split(stringValues, ",")
+}

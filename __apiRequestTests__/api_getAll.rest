@@ -1,1 +1,1 @@
-GET  http://localhost:7001/v1/movements
+GET  http://localhost:7001/v1/movements?name=pull+up

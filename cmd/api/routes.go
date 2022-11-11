@@ -18,6 +18,7 @@ func (app *application) routes() *httprouter.Router {
 
 	// Register the handlers for the endpoints with speific methods
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
+	router.GET("/v1/movements", app.getMovementsHandler)
 	router.POST("/v1/movements", app.createMovementHandler)
 	router.GET("/v1/movements/:id", app.showMovementHandler)
 	router.PUT("/v1/movements/:id", app.updateMovementHandler)
