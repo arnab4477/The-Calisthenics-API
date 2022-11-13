@@ -57,20 +57,28 @@ type MovementModel struct {
 
 // Method for getting all the movements from the database
 func (m MovementModel) GetAllMovements(
-	Name string, 
-	Skilltype []string, 
-	Muscles []string,
-	Difficulty string, 
-	Equipments []string,
-	filters Filters,) ([]*Movement, error) {
+	name string,
+	difficulty string,
+	skilltype []string, 
+	muscles []string, 
+	equipments []string,
+	filters Filters) ([]*Movement, error) {
 
 		// SQL query to get all the movements from the database
 		query := `
 			SELECT * FROM movements
+			WHERE (to_tsvector('english', name) @@ plainto_tsquery('english', $1) OR $1 = '')
+			AND (LOWER(difficulty) = LOWER($2) OR $2 = '')
+			AND (skilltype @> $3 OR $3 = '{}')
+			AND (muscles @> $4 OR $4 = '{}')
+			AND (equipments @> $5 OR $5 = '{}')
 			order by id`
 
 		// Execute the SQL query
-		rows, err := m.DB.Query(query)
+		rows, err := m.DB.Query(
+			query, name, difficulty, pq.Array(skilltype),
+			pq.Array(muscles), pq.Array(equipments))
+
 		if err != nil {
 			return nil, err
 		}

@@ -51,8 +51,8 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 
 	// Get the list of the movements from the database
 	movements, err := app.models.Movements.GetAllMovements(
-		params.Name, params.Skilltype, params.Muscles,
-		params.Difficulty, params.Equipments, params.Filters,
+		params.Name, params.Difficulty, params.Skilltype,
+		params.Muscles, params.Equipments, params.Filters,
 	)
 
 	if err != nil {
