@@ -55,8 +55,70 @@ type MovementModel struct {
 	DB *sql.DB
 }
 
+// Method for getting all the movements from the database
+func (m MovementModel) GetAllMovements(
+	Name string, 
+	Skilltype []string, 
+	Muscles []string,
+	Difficulty string, 
+	Equipments []string,
+	filters Filters,) ([]*Movement, error) {
+
+		// SQL query to get all the movements from the database
+		query := `
+			SELECT * FROM movements
+			order by id`
+
+		// Execute the SQL query
+		rows, err := m.DB.Query(query)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		// The movements array that hold all the movements
+		movements := []*Movement{}
+
+		// Initialize an emoty movement struct and out the data in it
+		// using rows.Next() to inerate over the rows
+		for rows.Next() {
+			var movement Movement
+
+			err := rows.Scan(
+				&movement.ID,
+				&movement.CreatedAt,
+				&movement.Name,
+				&movement.Description,
+				&movement.Image,
+				pq.Array(&movement.Tutorials),
+				pq.Array(&movement.Skilltype),
+				pq.Array(&movement.Muscles),
+				&movement.Difficulty,
+				pq.Array(&movement.Equipments),
+				pq.Array(&movement.Prerequisites),
+				&movement.Version,
+			)
+
+			if err != nil {
+				return nil, err
+			}
+
+			// Append the movement into the movements array
+			movements = append(movements, &movement)
+		}
+
+		// Check for any error that might have occured during the iteration
+		// If there is none then return the array
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+
+		return movements, nil
+
+	}
+
 // Method for inserting a new movement to the movement table
-func (m MovementModel) InsertMovement(movement *Movement) error {
+func (m MovementModel) InsertOneMovement(movement *Movement) error {
 	// SQL query for inserting new record to the Movements table
 	// And returning system generated data
 	query := `
@@ -75,7 +137,7 @@ func (m MovementModel) InsertMovement(movement *Movement) error {
 	return m.DB.QueryRow(query, args...).Scan(&movement.ID, &movement.CreatedAt, &movement.Version)
 }
 // Method for getting a new movement to the movement table
-func (m MovementModel) GetMovement(id int64) (*Movement, error) {
+func (m MovementModel) GetOneMovement(id int64) (*Movement, error) {
 	if id < 1 {
 		return nil, ErrNotFound
 	}
@@ -119,7 +181,7 @@ func (m MovementModel) GetMovement(id int64) (*Movement, error) {
 }
 
 // Method for updating a new movement to the movement table
-func (m MovementModel) UpdateMovement(movement *Movement) error {
+func (m MovementModel) UpdateOneMovement(movement *Movement) error {
 	// SQL query to update movements in the database
 	query := `
 		UPDATE movements
@@ -159,7 +221,7 @@ func (m MovementModel) UpdateMovement(movement *Movement) error {
 }
 
 // Method for deleting a new movement to the movement table
-func (m MovementModel) DeleteMovement(id int64) error {
+func (m MovementModel) DeleteOneMovement(id int64) error {
 
 	if id < 1 {
 		return ErrNotFound

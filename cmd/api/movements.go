@@ -12,20 +12,15 @@ import (
 
 // Handler method on the app instance for the POST /movements endpount
 func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
-	//Create a struct to hold the output values
-	var output struct {
+
+	//Create a struct to hold the params values
+	var params struct {
 		Name string 
-		Description string 
-		Image string 
-		Tutorials []string 
 		Skilltype []string 
 		Muscles []string 
 		Difficulty string 
-		Equipments []string 
-		Prerequisites []string
-		Sort string
-		Page int
-		Page_size int  
+		Equipments []string
+		data.Filters  
 	}
 
 	// Initiate a new Validator instance
@@ -34,32 +29,43 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 	// Get the query values from the url
 	queries := r.URL.Query()
 
-	// Read the queries and put them into the output struct
-	output.Name = app.readStrings(queries, "name", "")  
-	output.Description = app.readStrings(queries, "description", "")  
-	output.Image = app.readStrings(queries, "image", "")  
-	output.Difficulty = app.readStrings(queries, "difficulty", "")  
+	// Read the queries and put them into the params struct
+	params.Name = app.readStrings(queries, "name", "")  
+	params.Difficulty = app.readStrings(queries, "difficulty", "")  
 
-	output.Tutorials = app.readCsv(queries, "tutorials", []string{})
-	output.Skilltype = app.readCsv(queries, "skilltype", []string{})
-	output.Muscles = app.readCsv(queries, "muscles", []string{})
-	output.Equipments = app.readCsv(queries, "equipments", []string{})
-	output.Prerequisites = app.readCsv(queries, "prerequisites", []string{})
+	params.Skilltype = app.readCsv(queries, "skilltype", []string{})
+	params.Muscles = app.readCsv(queries, "muscles", []string{})
+	params.Equipments = app.readCsv(queries, "equipments", []string{})
 
-	output.Sort = app.readStrings(queries, "sort", "id")
-	output.Page = app.readInts(queries, "page", 1, v)
-	output.Page_size = app.readInts(queries, "page_size", 20, v)
+	params.Filters.Sort = app.readStrings(queries, "sort", "id")
+	params.Filters.Page = app.readInts(queries, "page", 1, v)
+	params.Filters.PageSize = app.readInts(queries, "page_size", 20, v)
 
-	// Check if the output data is valid
-	if !v.NoErrors() {
+	params.SortSafeList = []string{"id", "name", "skilltype", "muscles", "equipments", "difficulty" }
+
+	// Check if the query parameters for filtering data are valid
+	if data.ValidateFilters(v, params.Filters); !v.NoErrors() {
 		app.failedValidationError(w, r, v.Errors)
 		return
 	}
 
-	// Print the output
-	fmt.Fprintf(w, "%+v\n", output)
-}
+	// Get the list of the movements from the database
+	movements, err := app.models.Movements.GetAllMovements(
+		params.Name, params.Skilltype, params.Muscles,
+		params.Difficulty, params.Equipments, params.Filters,
+	)
 
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Send all the data back as JSON
+	err = app.writeJSON(w, envelope{"movements": movements}, http.StatusOK, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
 
 // Handler method on the app instance for the POST /movements endpount
 func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
@@ -115,7 +121,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Call the insert method on the movement model passing in the validated movement struct
 	// This will create a new record in the Movements table in the database
-	err = app.models.Movements.InsertMovement(movement)
+	err = app.models.Movements.InsertOneMovement(movement)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -138,13 +144,12 @@ func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Reque
 	// Get the id parameter
 	id, err := app.readIDParam(ps)
 	if err != nil || id < 1 {
-		app.logError(r, err)
 		app.notFoundResponse(w, r)
 		return
 	}
 
 	// Fetch data for a specific movement
-	movement, err := app.models.Movements.GetMovement(id)
+	movement, err := app.models.Movements.GetOneMovement(id)
 	if err != nil {
 		if errors.Is(err, data.ErrNotFound) {
 			app.notFoundResponse(w, r)
@@ -168,13 +173,12 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 	// Get the id parameter
 	id, err := app.readIDParam(ps)
 	if err != nil || id < 1 {
-		app.logError(r, err)
 		app.notFoundResponse(w, r)
 		return
 	}
 
 	// Fetch data for a specific movement
-	movement, err := app.models.Movements.GetMovement(id)
+	movement, err := app.models.Movements.GetOneMovement(id)
 	if err != nil {
 		if errors.Is(err, data.ErrNotFound) {
 			app.notFoundResponse(w, r)
@@ -231,7 +235,7 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Call the UpdateMovement method on the movement model passing in the validated movement struct
 	// This will update an existing record a record in the Movements table in the database
-	err = app.models.Movements.UpdateMovement(movement)
+	err = app.models.Movements.UpdateOneMovement(movement)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -250,13 +254,12 @@ func (app *application) deleteMovementHandler(w http.ResponseWriter, r *http.Req
 	// Get the id parameter
 	id, err := app.readIDParam(ps)
 	if err != nil || id < 1 {
-		app.logError(r, err)
 		app.notFoundResponse(w, r)
 		return
 	}
 
 	//Delete the record from the database
-	err = app.models.Movements.DeleteMovement(id)
+	err = app.models.Movements.DeleteOneMovement(id)
 	if err != nil {
 		if errors.Is(err, data.ErrNotFound) {
 			app.notFoundResponse(w, r)

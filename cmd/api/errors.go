@@ -16,6 +16,7 @@ func (app *application) writeError(w http.ResponseWriter, r *http.Request, statu
 	if err != nil {
 		app.logError(nil, err)
 		w.WriteHeader(500)
+		app.logger.Println(err)
 	}
 }
 
@@ -25,6 +26,7 @@ func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 	// Write and send the appropriate error message
 	message := "the server encountered a problem and could not proceed with your request"
 	app.writeError(w, r, http.StatusInternalServerError, message)
+	app.logger.Println(err)
 }
 // Handler that sends an error response in the case of the method not being allowed
 func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +52,7 @@ func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Requ
 // Handler that sends an error response in the case of a Bad Request
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.writeError(w, r, http.StatusBadRequest, err.Error())
+	app.logger.Println(err)
 }
 
 // Handler that sends an error response in the case of an failed validation error
