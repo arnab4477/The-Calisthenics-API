@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/validator"
@@ -65,14 +66,17 @@ func (m MovementModel) GetAllMovements(
 	filters Filters) ([]*Movement, error) {
 
 		// SQL query to get all the movements from the database
-		query := `
+		// There is full text search implemented for the name of the movement
+		// For documentation, visit: https://www.postgresql.org/docs/current/datatype-textsearch.html
+		//The movements will be sorted according to the given parameter (if any)
+		query := fmt.Sprintf(`
 			SELECT * FROM movements
 			WHERE (to_tsvector('english', name) @@ plainto_tsquery('english', $1) OR $1 = '')
 			AND (LOWER(difficulty) = LOWER($2) OR $2 = '')
 			AND (skilltype @> $3 OR $3 = '{}')
 			AND (muscles @> $4 OR $4 = '{}')
 			AND (equipments @> $5 OR $5 = '{}')
-			order by id`
+			order by %s %s, id ASC`, filters.sortColumns(), filters.sortDirection())
 
 		// Execute the SQL query
 		rows, err := m.DB.Query(

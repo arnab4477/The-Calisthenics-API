@@ -41,7 +41,7 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 	params.Filters.Page = app.readInts(queries, "page", 1, v)
 	params.Filters.PageSize = app.readInts(queries, "page_size", 20, v)
 
-	params.SortSafeList = []string{"id", "name", "skilltype", "muscles", "equipments", "difficulty" }
+	params.SortSafeList = []string{"name", "difficulty", "-name", "-difficulty" }
 
 	// Check if the query parameters for filtering data are valid
 	if data.ValidateFilters(v, params.Filters); !v.NoErrors() {
