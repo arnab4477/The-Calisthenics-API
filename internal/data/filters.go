@@ -48,3 +48,13 @@ func (f Filters) sortDirection() string {
 	return "ASC"
 }
 
+// Calculate the limit and the offset from the
+// Given parameters "page" and "page_size"
+func (f Filters) limit() int {
+	return f.Page
+}
+
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
+}
+

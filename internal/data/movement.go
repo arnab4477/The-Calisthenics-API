@@ -69,6 +69,7 @@ func (m MovementModel) GetAllMovements(
 		// There is full text search implemented for the name of the movement
 		// For documentation, visit: https://www.postgresql.org/docs/current/datatype-textsearch.html
 		//The movements will be sorted according to the given parameter (if any)
+		// The limit and offset handles the pagination of the returned data
 		query := fmt.Sprintf(`
 			SELECT * FROM movements
 			WHERE (to_tsvector('english', name) @@ plainto_tsquery('english', $1) OR $1 = '')
@@ -76,7 +77,9 @@ func (m MovementModel) GetAllMovements(
 			AND (skilltype @> $3 OR $3 = '{}')
 			AND (muscles @> $4 OR $4 = '{}')
 			AND (equipments @> $5 OR $5 = '{}')
-			order by %s %s, id ASC`, filters.sortColumns(), filters.sortDirection())
+			order by %s %s, id ASC
+			LIMIT %d OFFSET %d`, filters.sortColumns(), filters.sortDirection(),
+								 filters.limit(), filters.offset())
 
 		// Execute the SQL query
 		rows, err := m.DB.Query(
