@@ -51,7 +51,7 @@ func ValidateMovement(v *validator.Validator, input *Movement) {
 	v.Check(!validator.IsUnique(input.Prerequisites), "prerequisites", "must not contain duplicate values")
 }
 
-// Define a MovementModel struct which warps a SQL connectopn pool
+// MovementModel struct which warps a SQL connectopn pool
 type MovementModel struct {
 	DB *sql.DB
 }
@@ -148,7 +148,6 @@ func (m MovementModel) InsertOneMovement(movement *Movement) error {
 	
 	// Execute and return the QueryRow() method wuth the query and the args slice as parameters
 	// The Scan() method is used to return the system generated values
-	
 	return m.DB.QueryRow(query, args...).Scan(&movement.ID, &movement.CreatedAt, &movement.Version)
 }
 // Method for getting a new movement to the movement table
