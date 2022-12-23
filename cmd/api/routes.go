@@ -16,13 +16,17 @@ func (app *application) routes() *httprouter.Router {
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
-	// Register the handlers for the endpoints with speific methods
+	// Register the handlers for the /movements/ endpoints
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
 	router.GET("/v1/movements", app.getMovementsHandler)
 	router.POST("/v1/movements", app.createMovementHandler)
 	router.GET("/v1/movements/:id", app.showMovementHandler)
 	router.PUT("/v1/movements/:id", app.updateMovementHandler)
 	router.DELETE("/v1/movements/:id", app.deleteMovementHandler)
+
+	// Register the handlers for the /users/ endpoints
+	router.POST("/v1/users", app.registerUserHandler)
+
 
 
 	return router

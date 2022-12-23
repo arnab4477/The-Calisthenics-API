@@ -75,7 +75,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	//Create a struct to hold the input
+	// Create a struct to hold the input
 	var input struct {
 		Name string `json:"name"`
 		Description string `json:"description"`
@@ -191,7 +191,7 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	//Create a struct to hold the input
+	// Create a struct to hold the input
 	var input struct {
 		Name string `json:"name"`
 		Description string `json:"description"`

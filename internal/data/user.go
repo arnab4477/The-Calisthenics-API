@@ -59,12 +59,12 @@ func (p *password) SetHash(plainTextPassowrd string) error {
  // function to validate user's email address
  func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(email == "", "email", "must be provided")
-	v.Check(validator.Matches(email, validator.EmailRegEx), "email", "must be a valid email address")
+	v.Check(!validator.Matches(email, validator.EmailRegEx), "email", "must be a valid email address")
  }
  // function to validate user's plain text passwords
  func ValidatePlainPassword(v *validator.Validator, password string) {
 	v.Check(password == "", "password", "must be provided")
-	v.Check(len(password) <= 8, "password", "must be longer than 8 charaters")
+	v.Check(len(password) < 8, "password", "must be at least 8 charaters")
 	v.Check(len(password) >= 16, "password", "must be less than 16 charaters")
  }
 
