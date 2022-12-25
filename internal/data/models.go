@@ -17,6 +17,7 @@ var (
 type Models struct {
 	Movements MovementModel
 	Users UserModel
+	Tokens TokenModel
 }
 
 // This returns the Models struct with the initialized movement model
@@ -24,5 +25,6 @@ func NewModels(db *sql.DB) Models {
 	return Models {
 		Movements: MovementModel{DB: db},
 		Users: UserModel{DB: db},
+		Tokens: TokenModel{DB: db},
 	}
 }

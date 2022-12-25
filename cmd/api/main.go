@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/data"
+
 	_ "github.com/lib/pq"
 )
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/data"
 	"github.com/arnab4477/Parkour_API/internal/validator"
@@ -58,10 +59,22 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+
+	// Generate an activation token for the user
+	token, err := app.models.Tokens.NewToken(user.ID, 2*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"activationToken": token.PlainText,
+		"user": user,
+	}
 	
 	// If there has been no error, send the user as JSON response to the client
 	// along with the appropriate status code
-	err = app.writeJSON(w, envelope{"user": user}, http.StatusCreated, nil)
+	err = app.writeJSON(w, envelope{"response": responseData}, http.StatusCreated, nil)
 	if err !=  nil {
 		app.serverErrorResponse(w, r, err)
 	}
