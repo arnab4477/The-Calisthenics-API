@@ -1,8 +1,10 @@
 package data
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/arnab4477/Parkour_API/internal/validator"
 	"golang.org/x/crypto/bcrypt"
@@ -96,7 +98,7 @@ func (p *password) SetHash(plainTextPassowrd string) error {
  }
 
  // Function to insert a new user record to the database
- func (m UserModel) InsertOneuser(user *User) error {
+ func (m UserModel) InsertOneUser(user *User) error {
 	// SQL query to insert an yser
 	query := `
 		INSERT INTO users (username, email, password_hash, activated)
@@ -187,5 +189,45 @@ func (m UserModel) UpdateOneUser(user *User) error {
 }
 return nil
 }
+
+// Function to get one user by token
+func (m UserModel) GetUserFromToken(tokenScope, tokenPlaintext string) (*User, error) {
+
+	// Hash of the plaintext token 
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	// SQL query to get the user from token
+	query := `
+		SELECT users.id, users.username, users.email, users.activated, users.version  
+		FROM users
+		INNER JOIN tokens
+		ON users.id = tokens.user_id
+		WHERE tokens.hash = $1
+		AND tokens.scope = $2
+		AND tokens.expiry > $3`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	// Create an instance of the user struct and execute the query
+	var user User
+	err := m.DB.QueryRow(query, args...).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Activated,
+		&user.Version,
+	)
+	if err != nil {
+		switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return nil, ErrNotFound
+			default:
+				return nil, err
+		}
+	}
+
+	// Return the user
+	return &user, nil
+	}
 
 

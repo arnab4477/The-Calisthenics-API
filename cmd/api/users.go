@@ -48,7 +48,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Insert the user data into the database
-	err = app.models.Users.InsertOneuser(user)
+	err = app.models.Users.InsertOneUser(user)
 	if err != nil {
 		switch {
 			case errors.Is(err, data.ErrDuplicateEmail):
@@ -76,6 +76,63 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	// along with the appropriate status code
 	err = app.writeJSON(w, envelope{"response": responseData}, http.StatusCreated, nil)
 	if err !=  nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+// Handler method on the app instance for the POST /users/activate endpount
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
+	// Struct to hold the input
+	var input struct {
+		TokenPlaintext string `json:"token"`
+	}
+	// Read the request body and add it to the input struct
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Validate the plaintext token
+	v := validator.NewValidator()
+	if data.ValidateTokenPlainText(v, input.TokenPlaintext); !v.NoErrors() {
+		app.failedValidationError(w, r, v.Errors)
+		return
+	}
+
+	// Retrieve the user from the token
+	user, err := app.models.Users.GetUserFromToken(data.ScopeActivation, input.TokenPlaintext)
+	if err != nil {
+		switch {
+			case errors.Is(err, data.ErrNotFound):
+				v.AddError("token", "invalid or expired activation token")
+				app.failedValidationError(w, r, v.Errors)
+			default:
+				app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// Activate and update the user record
+	user.Activated = true
+	err = app.models.Users.UpdateOneUser(user)
+	if err != nil {
+		switch {
+			case errors.Is(err, data.ErrEditConflict):
+				app.editConflictResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// Delete all activation tokens for the user
+	err = app.models.Tokens.DeleteTokens(user.ID, data.ScopeActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	// Send the updated user details to the client in a JSON response.
+	err = app.writeJSON(w, envelope{"user": user}, http.StatusOK, nil)
+	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }

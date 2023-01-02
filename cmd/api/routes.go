@@ -26,8 +26,7 @@ func (app *application) routes() *httprouter.Router {
 
 	// Register the handlers for the /users/ endpoints
 	router.POST("/v1/users", app.registerUserHandler)
-
-
+	router.POST("/v1/users/activate", app.activateUserHandler)
 
 	return router
 }
