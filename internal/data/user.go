@@ -131,7 +131,8 @@ func (p *password) SetHash(plainTextPassowrd string) error {
 func (m UserModel) GetOneUserByEmail(email string) (*User, error) {
 	// SQL query to retrieve one user from the database with email
 	query := `
-		SELECT * from Users
+		SELECT id, username, password_hash, email, version
+		FROM Users
 		WHERE email=$1`
 	
 	// An instance of the user struct
@@ -141,7 +142,7 @@ func (m UserModel) GetOneUserByEmail(email string) (*User, error) {
 	err := m.DB.QueryRow(query, email).Scan(
 		&user.ID,
 		&user.Username,
-		&user.Password,
+		&user.Password.hash,
 		&user.Email,
 		&user.Version,
 	)
@@ -170,7 +171,8 @@ func (m UserModel) UpdateOneUser(user *User) error {
 	args := []interface{}{
 		user.Username,
 		user.Password.hash,
-		user.Email, user.Activated,
+		user.Email,
+		user.Activated,
 		user.ID,
 		user.Version,
 	}

@@ -13,15 +13,16 @@ import (
 // Constants for the tokens scope
 const (
 	ScopeActivation = "activation"
+	ScopeAuthentication = "authentication"
 )
 
 // Token struct to hold data for individual tokens
 type Token struct {
-	PlainText string
-	Hash []byte
-	User_id int64
-	Expiry time.Time
-	Scope string
+	PlainText string `json:"token"`
+	Hash []byte `json:"-"`
+	User_id int64 `json:"-"`
+	Expiry time.Time `json:"expiry"`
+	Scope string `json:"-"`
 }
 
 // Function to generate tpkems

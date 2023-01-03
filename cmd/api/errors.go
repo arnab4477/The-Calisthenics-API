@@ -59,3 +59,9 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 func (app *application) failedValidationError(w http.ResponseWriter, r *http.Request, errors map[string]string){
 	app.writeError(w, r, http.StatusUnprocessableEntity, errors)
 }
+
+// Handler that sends an error response in the case of an user sending invalid authentication credintials
+func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid authentication credentials"
+	app.writeError(w, r, http.StatusUnauthorized, message)
+	}
