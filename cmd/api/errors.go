@@ -64,4 +64,24 @@ func (app *application) failedValidationError(w http.ResponseWriter, r *http.Req
 func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	message := "invalid authentication credentials"
 	app.writeError(w, r, http.StatusUnauthorized, message)
-	}
+}
+// Handler that sends an error response in the case of a missing or invalid authentication token
+func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	// Add the Beaer header to inform the user what authentication we expect
+	w.Header().Set("WWW-Authenticate", "Bearer")
+	
+	message := "missing or invalid authentication token"
+	app.writeError(w, r, http.StatusUnauthorized, message)
+}
+
+// Handler that sends an error response in the case of the user not being aurhenticated
+func (app *application) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you are not authenticated for this action"
+	app.writeError(w, r, http.StatusUnauthorized, message)
+}
+
+// Handler that sends an error response in the case of an user not being activated
+func (app *application) inactiveAccountResponse(w http.ResponseWriter, r *http.Request) {
+	message := "user must be activated for this action"
+	app.writeError(w, r, http.StatusForbidden, message)
+}

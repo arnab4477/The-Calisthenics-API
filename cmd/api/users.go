@@ -74,7 +74,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	
 	// If there has been no error, send the user as JSON response to the client
 	// along with the appropriate status code
-	err = app.writeJSON(w, envelope{"response": responseData}, http.StatusCreated, nil)
+	err = app.writeJSON(w, envelope{"data": responseData}, http.StatusCreated, nil)
 	if err !=  nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -132,6 +132,72 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 	// Send the updated user details to the client in a JSON response.
 	err = app.writeJSON(w, envelope{"user": user}, http.StatusOK, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+// Handler method for the /user/login endpoint
+func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
+	// Inputstruct to hold the email and password
+	var input struct {
+		Email string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Read the input JSON and add it to the input struct
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Validate the email and password
+	v := validator.NewValidator()
+	data.ValidateEmail(v, input.Email)
+	data.ValidatePlainPassword(v, input.Password)
+	if !v.NoErrors() {
+		app.failedValidationError(w, r, v.Errors)
+		return
+	}
+
+	// Lookup the user record based on the email 
+	user, err := app.models.Users.GetOneUserByEmail(input.Email)
+	if err != nil {
+	switch {
+		case errors.Is(err, data.ErrNotFound):
+			app.invalidCredentialsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// Check if the provided password matches the user's password
+	match, err := user.Password.Matchhash(input.Password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	if !match {
+		app.invalidCredentialsResponse(w, r)
+		return
+	}
+
+	// Create the token with 30 days as expiry
+	token, err := app.models.Tokens.NewToken(user.ID, (24 * 30)*time.Hour, data.ScopeAuthentication)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"authenticationToken": token,
+		"user": user,
+	}
+
+	// Send the token as response
+	err = app.writeJSON(w, envelope{"data": responseData}, http.StatusCreated, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

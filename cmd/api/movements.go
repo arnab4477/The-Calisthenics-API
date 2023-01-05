@@ -139,7 +139,7 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 }
 
 // Handler method on the app instance for the GET /movements/:id endpount
-func (app *application) showMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (app *application) getOneMovementHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Get the id parameter
 	id, err := app.readIDParam(ps)

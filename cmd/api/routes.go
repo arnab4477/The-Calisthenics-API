@@ -19,10 +19,11 @@ func (app *application) routes() *httprouter.Router {
 	// Register the handlers for the /movements/ endpoints
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
 	router.GET("/v1/movements", app.getMovementsHandler)
-	router.POST("/v1/movements", app.createMovementHandler)
-	router.GET("/v1/movements/:id", app.showMovementHandler)
-	router.PUT("/v1/movements/:id", app.updateMovementHandler)
-	router.DELETE("/v1/movements/:id", app.deleteMovementHandler)
+	router.GET("/v1/movements/:id", app.getOneMovementHandler)
+	
+	router.POST("/v1/movements", app.authenticate(app.requireActivatedUser(app.createMovementHandler)))
+	router.PUT("/v1/movements/:id", app.authenticate(app.requireActivatedUser(app.updateMovementHandler)))
+	router.DELETE("/v1/movements/:id", app.authenticate(app.requireActivatedUser(app.deleteMovementHandler)))
 
 	// Register the handlers for the /users/ endpoints
 	router.POST("/v1/users", app.registerUserHandler)

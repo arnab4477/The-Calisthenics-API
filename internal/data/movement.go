@@ -200,7 +200,7 @@ func (m MovementModel) UpdateOneMovement(movement *Movement) error {
 	query := `
 		UPDATE movements
 		SET name = $1, description = $2, image = $3, tutorials = $4, skilltype = $5, muscles = $6, difficulty = $7, equipments = $8, prerequisite = $9, version = version + 1
-		WHERE id = $10 and verion = $11
+		WHERE id = $10 and version = $11
 		RETURNING version`
 
 	// Interface to hold all the placeholder values for the query

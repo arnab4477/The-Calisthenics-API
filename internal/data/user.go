@@ -25,26 +25,37 @@ type User struct {
 	Version int `json:"-"`
 }
 
+// An anonymous user instance
+var (
+	AnonymousUser = &User{}
+)
+
+
+// Function to check id an user is anoynous
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
 
 // function to hash user's password and store it in the password struct
-func (p *password) SetHash(plainTextPassowrd string) error {
+func (p *password) SetHash(plainTextPassword string) error {
 	// Hash the plainTextPassowrd using bcrypt
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainTextPassowrd), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(plainTextPassword), 10)
 
 	if err != nil {
 		return err
 	}
 
 	// Set the values to the struct
-	p.plain = plainTextPassowrd
+	p.plain = plainTextPassword
 	p.hash = hash
 
 	return nil
 }
 
  // Function to chek if the provided password matches its hash
- func (p *password) Matchhash(plainTextPassowrd string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plainTextPassowrd))
+ func (p *password) Matchhash(plainTextPassword string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plainTextPassword))
 	if err != nil {
 		switch{
 			// error if the hash does not match
@@ -200,7 +211,7 @@ func (m UserModel) GetUserFromToken(tokenScope, tokenPlaintext string) (*User, e
 
 	// SQL query to get the user from token
 	query := `
-		SELECT users.id, users.username, users.email, users.activated, users.version  
+		SELECT users.id, users.username, users.email, users.password_hash, users.activated, users.version  
 		FROM users
 		INNER JOIN tokens
 		ON users.id = tokens.user_id
@@ -216,6 +227,7 @@ func (m UserModel) GetUserFromToken(tokenScope, tokenPlaintext string) (*User, e
 		&user.ID,
 		&user.Username,
 		&user.Email,
+		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
 	)
