@@ -20,7 +20,7 @@ func (app *application) routes() *httprouter.Router {
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
 	router.GET("/v1/movements", app.allowCORS(app.getMovementsHandler))
 	router.GET("/v1/movements/:id", app.allowCORS(app.getOneMovementHandler))
-	
+
 	router.POST("/v1/movements", app.allowCORS(app.authenticate(app.requireActivatedUser(app.createMovementHandler))))
 	router.PUT("/v1/movements/:id", app.allowCORS(app.authenticate(app.requireActivatedUser(app.updateMovementHandler))))
 	router.DELETE("/v1/movements/:id", app.allowCORS(app.authenticate(app.requireActivatedUser(app.deleteMovementHandler))))

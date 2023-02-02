@@ -12,17 +12,17 @@ import (
 
 // Constants for the tokens scope
 const (
-	ScopeActivation = "activation"
+	ScopeActivation     = "activation"
 	ScopeAuthentication = "authentication"
 )
 
 // Token struct to hold data for individual tokens
 type Token struct {
-	PlainText string `json:"token"`
-	Hash []byte `json:"-"`
-	User_id int64 `json:"-"`
-	Expiry time.Time `json:"expiry"`
-	Scope string `json:"-"`
+	PlainText string    `json:"token"`
+	Hash      []byte    `json:"-"`
+	User_id   int64     `json:"-"`
+	Expiry    time.Time `json:"expiry"`
+	Scope     string    `json:"-"`
 }
 
 // Function to generate tpkems
@@ -30,8 +30,8 @@ func generateToken(userId int64, ttl time.Duration, scope string) (*Token, error
 	// Add the given data to the token struct
 	token := &Token{
 		User_id: userId,
-		Expiry: time.Now().Add(ttl),
-		Scope: scope,
+		Expiry:  time.Now().Add(ttl),
+		Scope:   scope,
 	}
 
 	// Initialize a 16 bytes long 0 value byte slice
@@ -70,7 +70,7 @@ func (m TokenModel) InsertOneToken(token *Token) error {
 	query := `
 		INSERT INTO tokens (hash, expiry, user_id, scope)
 		VALUES ($1, $2, $3, $4)`
-	
+
 	// Create the values slicr and execute the query
 	args := []interface{}{token.Hash, token.Expiry, token.User_id, token.Scope}
 	_, err := m.DB.Exec(query, args...)

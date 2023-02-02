@@ -12,18 +12,18 @@ import (
 
 // Declare the movement struct and the JSON alternative keys
 type Movement struct {
-	ID int64 `json:"id"`
-	CreatedAt time.Time `json:"-"` // This field will not show up in the JSON response
-	Name string `json:"name"`
-	Description string `json:"description"`
-	Image string `json:"image"`
-	Tutorials []string `json:"tutorials"` // Array of helpful tutorial links (YouTube, blogs etc) for the movement
-	Skilltype []string `json:"skilltype"` // The type the movement belongs to such as 'vault', 'climb' etc
-	Muscles []string `json:"muscles"`
-	Difficulty string `json:"difficulty"` // Beginner, Intermediate or Advance
-	Equipments []string `json:"equipments"`
-	Prerequisites []string `json:"prerequisite"`
-	Version int32 `json:"version"` // Version will start at 1 and will be incremented each time the struct is updated
+	ID            int64     `json:"id"`
+	CreatedAt     time.Time `json:"-"` // This field will not show up in the JSON response
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Image         string    `json:"image"`
+	Tutorials     []string  `json:"tutorials"` // Array of helpful tutorial links (YouTube, blogs etc) for the movement
+	Skilltype     []string  `json:"skilltype"` // The type the movement belongs to such as 'vault', 'climb' etc
+	Muscles       []string  `json:"muscles"`
+	Difficulty    string    `json:"difficulty"` // Beginner, Intermediate or Advance
+	Equipments    []string  `json:"equipments"`
+	Prerequisites []string  `json:"prerequisite"`
+	Version       int32     `json:"version"` // Version will start at 1 and will be incremented each time the struct is updated
 }
 
 // Check if the input data causes any validation error
@@ -31,7 +31,7 @@ func ValidateMovement(v *validator.Validator, input *Movement) {
 	// Check for valudation errors and provide keys for error messages in case of an error
 	v.Check(input.Name == "", "name", "must not be empty")
 	v.Check(len(input.Name) >= 256, "name", "must not be over 256 bytes")
-	
+
 	v.Check(input.Description == "", "description", "must not be empty")
 	v.Check(input.Image == "", "image", "must be provided")
 	v.Check(input.Difficulty == "", "difficulty", "must be provided")
@@ -42,7 +42,7 @@ func ValidateMovement(v *validator.Validator, input *Movement) {
 
 	v.Check(len(input.Equipments) <= 0, "equipments", "must be provided")
 	v.Check(len(input.Difficulty) <= 0, "difficulty", "must be provided")
-	
+
 	// Check that the items in various slices are uniuye
 	v.Check(!validator.IsUnique(input.Tutorials), "tutorials", "must not contain duplicate values")
 	v.Check(!validator.IsUnique(input.Skilltype), "skilltype", "must not contain duplicate values")
@@ -60,17 +60,17 @@ type MovementModel struct {
 func (m MovementModel) GetAllMovements(
 	name string,
 	difficulty string,
-	skilltype []string, 
-	muscles []string, 
+	skilltype []string,
+	muscles []string,
 	equipments []string,
 	filters Filters) ([]*Movement, error) {
 
-		// SQL query to get all the movements from the database
-		// There is full text search implemented for the name of the movement
-		// For documentation, visit: https://www.postgresql.org/docs/current/datatype-textsearch.html
-		//The movements will be sorted according to the given parameter (if any)
-		// The limit and offset handles the pagination of the returned data
-		query := fmt.Sprintf(`
+	// SQL query to get all the movements from the database
+	// There is full text search implemented for the name of the movement
+	// For documentation, visit: https://www.postgresql.org/docs/current/datatype-textsearch.html
+	//The movements will be sorted according to the given parameter (if any)
+	// The limit and offset handles the pagination of the returned data
+	query := fmt.Sprintf(`
 			SELECT * FROM movements
 			WHERE (to_tsvector('english', name) @@ plainto_tsquery('english', $1) OR $1 = '')
 			AND (LOWER(difficulty) = LOWER($2) OR $2 = '')
@@ -79,58 +79,58 @@ func (m MovementModel) GetAllMovements(
 			AND (equipments @> $5 OR $5 = '{}')
 			order by %s %s, id ASC
 			LIMIT %d OFFSET %d`, filters.sortColumns(), filters.sortDirection(),
-								 filters.limit(), filters.offset())
+		filters.limit(), filters.offset())
 
-		// Execute the SQL query
-		rows, err := m.DB.Query(
-			query, name, difficulty, pq.Array(skilltype),
-			pq.Array(muscles), pq.Array(equipments))
+	// Execute the SQL query
+	rows, err := m.DB.Query(
+		query, name, difficulty, pq.Array(skilltype),
+		pq.Array(muscles), pq.Array(equipments))
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// The movements array that hold all the movements
+	movements := []*Movement{}
+
+	// Initialize an emoty movement struct and out the data in it
+	// using rows.Next() to inerate over the rows
+	for rows.Next() {
+		var movement Movement
+
+		err := rows.Scan(
+			&movement.ID,
+			&movement.CreatedAt,
+			&movement.Name,
+			&movement.Description,
+			&movement.Image,
+			pq.Array(&movement.Tutorials),
+			pq.Array(&movement.Skilltype),
+			pq.Array(&movement.Muscles),
+			&movement.Difficulty,
+			pq.Array(&movement.Equipments),
+			pq.Array(&movement.Prerequisites),
+			&movement.Version,
+		)
 
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
 
-		// The movements array that hold all the movements
-		movements := []*Movement{}
-
-		// Initialize an emoty movement struct and out the data in it
-		// using rows.Next() to inerate over the rows
-		for rows.Next() {
-			var movement Movement
-
-			err := rows.Scan(
-				&movement.ID,
-				&movement.CreatedAt,
-				&movement.Name,
-				&movement.Description,
-				&movement.Image,
-				pq.Array(&movement.Tutorials),
-				pq.Array(&movement.Skilltype),
-				pq.Array(&movement.Muscles),
-				&movement.Difficulty,
-				pq.Array(&movement.Equipments),
-				pq.Array(&movement.Prerequisites),
-				&movement.Version,
-			)
-
-			if err != nil {
-				return nil, err
-			}
-
-			// Append the movement into the movements array
-			movements = append(movements, &movement)
-		}
-
-		// Check for any error that might have occured during the iteration
-		// If there is none then return the array
-		if err = rows.Err(); err != nil {
-			return nil, err
-		}
-
-		return movements, nil
-
+		// Append the movement into the movements array
+		movements = append(movements, &movement)
 	}
+
+	// Check for any error that might have occured during the iteration
+	// If there is none then return the array
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return movements, nil
+
+}
 
 // Method for inserting a new movement to the movement table
 func (m MovementModel) InsertOneMovement(movement *Movement) error {
@@ -143,13 +143,14 @@ func (m MovementModel) InsertOneMovement(movement *Movement) error {
 
 	// Args slice that holds the values for the placeholders in the SQL query
 	// These values are from the movement struct
-	args := 
+	args :=
 		[]interface{}{movement.Name, movement.Description, movement.Image, pq.Array(movement.Tutorials), pq.Array(movement.Skilltype), pq.Array(movement.Muscles), movement.Difficulty, pq.Array(movement.Equipments), pq.Array(movement.Prerequisites)}
-	
+
 	// Execute and return the QueryRow() method wuth the query and the args slice as parameters
 	// The Scan() method is used to return the system generated values
 	return m.DB.QueryRow(query, args...).Scan(&movement.ID, &movement.CreatedAt, &movement.Version)
 }
+
 // Method for getting a new movement to the movement table
 func (m MovementModel) GetOneMovement(id int64) (*Movement, error) {
 	if id < 1 {
@@ -218,7 +219,7 @@ func (m MovementModel) UpdateOneMovement(movement *Movement) error {
 		movement.Version,
 	}
 
-	// Execute the QueryRow method to update the record and scan the version value to the struct 
+	// Execute the QueryRow method to update the record and scan the version value to the struct
 	err := m.DB.QueryRow(query, args...).Scan(&movement.Version)
 	if err != nil {
 		// If no rows were affected that means there was an edit conflict
@@ -245,7 +246,7 @@ func (m MovementModel) DeleteOneMovement(id int64) error {
 	query := `
 		DELETE FROM movements
 		WHERE id = $1`
-	
+
 	result, err := m.DB.Exec(query, id)
 	if err != nil {
 		return err

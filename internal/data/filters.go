@@ -8,9 +8,9 @@ import (
 
 // This filters struct is to be used in the query parameters of urls
 type Filters struct {
-	Sort string
-	Page int
-	PageSize int
+	Sort         string
+	Page         int
+	PageSize     int
 	SortSafeList []string
 }
 
@@ -22,10 +22,10 @@ func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(!validator.In(f.Sort, f.SortSafeList...), "sort", "invalid sort value")
 
 	// Check that the page and page_size parameters contain sensible values
-	v.Check(f.Page < 0, "page", "must be greater than zero") 
-	v.Check(f.Page > 10_000_000, "page", "must be lower than 10 million") 
-	v.Check(f.PageSize < 0, "page_size", "must be greater than zero") 
-	v.Check(f.PageSize > 100, "page_size", "must be lower than one hundred") 
+	v.Check(f.Page < 0, "page", "must be greater than zero")
+	v.Check(f.Page > 10_000_000, "page", "must be lower than 10 million")
+	v.Check(f.PageSize < 0, "page_size", "must be greater than zero")
+	v.Check(f.PageSize > 100, "page_size", "must be lower than one hundred")
 }
 
 // Check that the sort parameters re valid
@@ -57,4 +57,3 @@ func (f Filters) limit() int {
 func (f Filters) offset() int {
 	return (f.Page - 1) * f.PageSize
 }
-

@@ -48,7 +48,7 @@ func Matches(value string, regex *regexp.Regexp) bool {
 	return regex.MatchString(value)
 }
 
-//this returns true if all the strings in a slice are unique
+// this returns true if all the strings in a slice are unique
 func IsUnique(values []string) bool {
 	// Create a map that will only contain the unique values of the slice
 	uniqueValue := make(map[string]bool)
@@ -65,5 +65,3 @@ func IsUnique(values []string) bool {
 var (
 	EmailRegEx = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
-
-

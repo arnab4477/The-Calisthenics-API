@@ -15,12 +15,12 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 
 	//Create a struct to hold the params values
 	var params struct {
-		Name string 
-		Skilltype []string 
-		Muscles []string 
-		Difficulty string 
+		Name       string
+		Skilltype  []string
+		Muscles    []string
+		Difficulty string
 		Equipments []string
-		data.Filters  
+		data.Filters
 	}
 
 	// Initiate a new Validator instance
@@ -30,8 +30,8 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 	queries := r.URL.Query()
 
 	// Read the queries and put them into the params struct
-	params.Name = app.readStrings(queries, "name", "")  
-	params.Difficulty = app.readStrings(queries, "difficulty", "")  
+	params.Name = app.readStrings(queries, "name", "")
+	params.Difficulty = app.readStrings(queries, "difficulty", "")
 
 	params.Skilltype = app.readCsv(queries, "skilltype", []string{})
 	params.Muscles = app.readCsv(queries, "muscles", []string{})
@@ -41,7 +41,7 @@ func (app *application) getMovementsHandler(w http.ResponseWriter, r *http.Reque
 	params.Filters.Page = app.readInts(queries, "page", 1, v)
 	params.Filters.PageSize = app.readInts(queries, "page_size", 20, v)
 
-	params.SortSafeList = []string{"id", "name", "difficulty", "-name", "-difficulty" }
+	params.SortSafeList = []string{"id", "name", "difficulty", "-name", "-difficulty"}
 
 	// Check if the query parameters for filtering data are valid
 	if data.ValidateFilters(v, params.Filters); !v.NoErrors() {
@@ -77,15 +77,15 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Create a struct to hold the input
 	var input struct {
-		Name string `json:"name"`
-		Description string `json:"description"`
-		Image string `json:"image"`
-		Tutorials []string `json:"tutorials"` 
-		Skilltype []string `json:"skilltype"`
-		Muscles []string `json:"muscles"`
-		Difficulty string `json:"difficulty"` 
-		Equipments []string `json:"equipments"`
-		Prerequisites []string `json:"prerequisite"` 
+		Name          string   `json:"name"`
+		Description   string   `json:"description"`
+		Image         string   `json:"image"`
+		Tutorials     []string `json:"tutorials"`
+		Skilltype     []string `json:"skilltype"`
+		Muscles       []string `json:"muscles"`
+		Difficulty    string   `json:"difficulty"`
+		Equipments    []string `json:"equipments"`
+		Prerequisites []string `json:"prerequisite"`
 	}
 
 	// Decode the JSON request and send an appropriate response in case of an error
@@ -97,20 +97,19 @@ func (app *application) createMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Create a new movement instance with the input data
 	movement := &data.Movement{
-		Name: input.Name,
-		Description: input.Description,
-		Image: input.Image,
-		Tutorials: input.Tutorials,
-		Skilltype: input.Skilltype,
-		Muscles: input.Muscles,
-		Difficulty: input.Difficulty,
-		Equipments: input.Equipments,
+		Name:          input.Name,
+		Description:   input.Description,
+		Image:         input.Image,
+		Tutorials:     input.Tutorials,
+		Skilltype:     input.Skilltype,
+		Muscles:       input.Muscles,
+		Difficulty:    input.Difficulty,
+		Equipments:    input.Equipments,
 		Prerequisites: input.Prerequisites,
 	}
 
 	// Initiate a new Validator instance
 	v := validator.NewValidator()
-
 
 	// If there are no errors then proceed
 	// Else send error response back
@@ -193,15 +192,15 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Create a struct to hold the input
 	var input struct {
-		Name string `json:"name"`
-		Description string `json:"description"`
-		Image string `json:"image"`
-		Tutorials []string `json:"tutorials"` 
-		Skilltype []string `json:"skilltype"`
-		Muscles []string `json:"muscles"`
-		Difficulty string `json:"difficulty"` 
-		Equipments []string `json:"equipments"`
-		Prerequisites []string `json:"prerequisite"` 
+		Name          string   `json:"name"`
+		Description   string   `json:"description"`
+		Image         string   `json:"image"`
+		Tutorials     []string `json:"tutorials"`
+		Skilltype     []string `json:"skilltype"`
+		Muscles       []string `json:"muscles"`
+		Difficulty    string   `json:"difficulty"`
+		Equipments    []string `json:"equipments"`
+		Prerequisites []string `json:"prerequisite"`
 	}
 
 	// Decode the JSON request and send an appropriate response in case of an error
@@ -224,7 +223,6 @@ func (app *application) updateMovementHandler(w http.ResponseWriter, r *http.Req
 
 	// Initiate a new Validator instance
 	v := validator.NewValidator()
-
 
 	// If there are no errors then proceed
 	// Else send error response back

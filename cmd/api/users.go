@@ -11,11 +11,11 @@ import (
 )
 
 // Handler method on the app instance for the POST /users endpount
-func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) { 
+func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
 	// Struct ot hold the input for the user's data
 	var input struct {
 		Username string `json:"username"`
-		Email string `json:"email"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -28,8 +28,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// Copy the input data to the user struct
 	user := &data.User{
-		Username: input.Username,
-		Email: input.Email,
+		Username:  input.Username,
+		Email:     input.Email,
 		Activated: false,
 	}
 
@@ -51,11 +51,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	err = app.models.Users.InsertOneUser(user)
 	if err != nil {
 		switch {
-			case errors.Is(err, data.ErrDuplicateEmail):
-				v.AddError("email", "must be unique")
-				app.failedValidationError(w, r, v.Errors)
-			default:
-				app.serverErrorResponse(w, r, err)
+		case errors.Is(err, data.ErrDuplicateEmail):
+			v.AddError("email", "must be unique")
+			app.failedValidationError(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
@@ -69,13 +69,13 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	responseData := map[string]interface{}{
 		"activationToken": token.PlainText,
-		"user": user,
+		"user":            user,
 	}
-	
+
 	// If there has been no error, send the user as JSON response to the client
 	// along with the appropriate status code
 	err = app.writeJSON(w, envelope{"data": responseData}, http.StatusCreated, nil)
-	if err !=  nil {
+	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
@@ -104,11 +104,11 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	user, err := app.models.Users.GetUserFromToken(data.ScopeActivation, input.TokenPlaintext)
 	if err != nil {
 		switch {
-			case errors.Is(err, data.ErrNotFound):
-				v.AddError("token", "invalid or expired activation token")
-				app.failedValidationError(w, r, v.Errors)
-			default:
-				app.serverErrorResponse(w, r, err)
+		case errors.Is(err, data.ErrNotFound):
+			v.AddError("token", "invalid or expired activation token")
+			app.failedValidationError(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
@@ -117,10 +117,10 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	err = app.models.Users.UpdateOneUser(user)
 	if err != nil {
 		switch {
-			case errors.Is(err, data.ErrEditConflict):
-				app.editConflictResponse(w, r)
-			default:
-				app.serverErrorResponse(w, r, err)
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
 		}
 		return
 	}
@@ -141,7 +141,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps httprouter.Params) {
 	// Inputstruct to hold the email and password
 	var input struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
@@ -161,10 +161,10 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps
 		return
 	}
 
-	// Lookup the user record based on the email 
+	// Lookup the user record based on the email
 	user, err := app.models.Users.GetOneUserByEmail(input.Email)
 	if err != nil {
-	switch {
+		switch {
 		case errors.Is(err, data.ErrNotFound):
 			app.invalidCredentialsResponse(w, r)
 		default:
@@ -185,7 +185,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps
 	}
 
 	// Create the token with 30 days as expiry
-	token, err := app.models.Tokens.NewToken(user.ID, (24 * 30)*time.Hour, data.ScopeAuthentication)
+	token, err := app.models.Tokens.NewToken(user.ID, (24*30)*time.Hour, data.ScopeAuthentication)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -193,7 +193,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps
 
 	responseData := map[string]interface{}{
 		"authenticationToken": token,
-		"user": user,
+		"user":                user,
 	}
 
 	// Send the token as response
@@ -202,4 +202,3 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request, _ps
 		app.serverErrorResponse(w, r, err)
 	}
 }
-

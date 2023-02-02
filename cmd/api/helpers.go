@@ -37,12 +37,12 @@ func (app *application) writeJSON(w http.ResponseWriter, data envelope, status i
 	if err != nil {
 		return err
 	}
-	
+
 	// Append a new line at the end for better view
 	json = append(json, '\n')
 
 	// Iterate over the given header parameter and set the headers
-	for key, value := range(header) {
+	for key, value := range header {
 		w.Header()[key] = value
 	}
 
@@ -79,16 +79,16 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInp
 
 		case errors.Is(err, io.ErrUnexpectedEOF):
 			return errors.New("body contains badly formed JSON")
-			
+
 		case errors.As(err, &syntaxError):
 			return fmt.Errorf("body contains badly formed JSON (at charater %d)", syntaxError.Offset)
-			
+
 		case errors.As(err, &unmarshalTypeError):
 			if unmarshalTypeError.Field != "" {
 				return fmt.Errorf("body contains incorrect JSON types for field at %q", unmarshalTypeError.Field)
 			}
 			return fmt.Errorf("body contains badly formed JSON (at charater %d)", unmarshalTypeError.Offset)
-		
+
 		// This case is to be deleted to allow unknown fields
 		case strings.HasPrefix(err.Error(), "json: unknown field "):
 			unknownKey := strings.TrimPrefix(err.Error(), "json: unknown field ")
@@ -96,7 +96,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, jsonInp
 
 		case err.Error() == "http: request body too large":
 			return fmt.Errorf("request body cannot be larger than %d bytes", maxBytes)
-			
+
 		case errors.As(err, &InvalidUnmarshalError):
 			panic(err)
 
@@ -130,6 +130,7 @@ func (app *application) readStrings(queries url.Values, key string, defaultValue
 
 	return values
 }
+
 // Function that parses the url query and returns the integers
 func (app *application) readInts(queries url.Values, key string, defaultValue int, v *validator.Validator) int {
 
@@ -150,6 +151,7 @@ func (app *application) readInts(queries url.Values, key string, defaultValue in
 
 	return intValues
 }
+
 // Function that parses the url query and returns the comma separated values
 func (app *application) readCsv(queries url.Values, key string, defaultValue []string) []string {
 

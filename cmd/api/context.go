@@ -18,6 +18,7 @@ func (app *application) contextSetUser(r *http.Request, user *data.User) *http.R
 	ctx := context.WithValue(r.Context(), userContextKey, user)
 	return r.WithContext(ctx)
 }
+
 // Method to retrieve the User struct from the request context
 func (app *application) contextGetUser(r *http.Request) *data.User {
 	user, ok := r.Context().Value(userContextKey).(*data.User)

@@ -13,16 +13,17 @@ import (
 // Cystom password type to hold the user's password
 type password struct {
 	plain string
-	hash []byte
+	hash  []byte
 }
+
 // The User struct
 type User struct {
-	ID int64 `json:"id"`
-	Username string `json:"username"`
-	Email string `json:"email"`
-	Password password `json:"-"`
-	Activated bool `json:"activated"`
-	Version int `json:"-"`
+	ID        int64    `json:"id"`
+	Username  string   `json:"username"`
+	Email     string   `json:"email"`
+	Password  password `json:"-"`
+	Activated bool     `json:"activated"`
+	Version   int      `json:"-"`
 }
 
 // An anonymous user instance
@@ -30,12 +31,10 @@ var (
 	AnonymousUser = &User{}
 )
 
-
 // Function to check id an user is anoynous
 func (u *User) IsAnonymous() bool {
 	return u == AnonymousUser
 }
-
 
 // function to hash user's password and store it in the password struct
 func (p *password) SetHash(plainTextPassword string) error {
@@ -53,36 +52,37 @@ func (p *password) SetHash(plainTextPassword string) error {
 	return nil
 }
 
- // Function to chek if the provided password matches its hash
- func (p *password) Matchhash(plainTextPassword string) (bool, error) {
+// Function to chek if the provided password matches its hash
+func (p *password) Matchhash(plainTextPassword string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plainTextPassword))
 	if err != nil {
-		switch{
-			// error if the hash does not match
-			case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-				return false, nil
-			default:
-				return false, err
+		switch {
+		// error if the hash does not match
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
 		}
 
 	}
 	return true, nil
- }
+}
 
- // function to validate user's email address
- func ValidateEmail(v *validator.Validator, email string) {
+// function to validate user's email address
+func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(email == "", "email", "must be provided")
 	v.Check(!validator.Matches(email, validator.EmailRegEx), "email", "must be a valid email address")
- }
- // function to validate user's plain text passwords
- func ValidatePlainPassword(v *validator.Validator, password string) {
+}
+
+// function to validate user's plain text passwords
+func ValidatePlainPassword(v *validator.Validator, password string) {
 	v.Check(password == "", "password", "must be provided")
 	v.Check(len(password) < 8, "password", "must be at least 8 charaters")
 	v.Check(len(password) >= 16, "password", "must be less than 16 charaters")
- }
+}
 
- // Function to validate the user
- func ValidateUser(v *validator.Validator, user *User) {
+// Function to validate the user
+func ValidateUser(v *validator.Validator, user *User) {
 	// Validate the user's username
 	v.Check(user.Username == "", "username", "must be provided")
 	v.Check(len(user.Username) <= 3, "username", "must be longer than 100 characters")
@@ -101,15 +101,15 @@ func (p *password) SetHash(plainTextPassword string) error {
 	if user.Password.hash == nil {
 		panic("user's password must never be nil")
 	}
- }
+}
 
 // UserModel struct which warps a SQL connectopn pool
- type UserModel struct {
+type UserModel struct {
 	DB *sql.DB
- }
+}
 
- // Function to insert a new user record to the database
- func (m UserModel) InsertOneUser(user *User) error {
+// Function to insert a new user record to the database
+func (m UserModel) InsertOneUser(user *User) error {
 	// SQL query to insert an yser
 	query := `
 		INSERT INTO users (username, email, password_hash, activated)
@@ -123,7 +123,7 @@ func (p *password) SetHash(plainTextPassword string) error {
 		user.Password.hash,
 		user.Activated,
 	}
-	
+
 	// Execute the query. If an user provides a duplicate email then it will return
 	// an error because of the UNIQYE constraint
 	err := m.DB.QueryRow(query, args...).Scan(&user.ID, &user.Version)
@@ -135,7 +135,7 @@ func (p *password) SetHash(plainTextPassword string) error {
 			return err
 		}
 	}
-	return nil;
+	return nil
 }
 
 // Function to get one user by an  unique email
@@ -145,7 +145,7 @@ func (m UserModel) GetOneUserByEmail(email string) (*User, error) {
 		SELECT id, username, password_hash, email, version
 		FROM Users
 		WHERE email=$1`
-	
+
 	// An instance of the user struct
 	var user User
 
@@ -160,7 +160,7 @@ func (m UserModel) GetOneUserByEmail(email string) (*User, error) {
 
 	if err != nil {
 		switch {
-			// error in case of no records found
+		// error in case of no records found
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrNotFound
 		default:
@@ -187,7 +187,7 @@ func (m UserModel) UpdateOneUser(user *User) error {
 		user.ID,
 		user.Version,
 	}
-	
+
 	// Execute the SQLquery
 	err := m.DB.QueryRow(query, args...).Scan(&user.Version)
 
@@ -199,14 +199,14 @@ func (m UserModel) UpdateOneUser(user *User) error {
 		default:
 			return err
 		}
-}
-return nil
+	}
+	return nil
 }
 
 // Function to get one user by token
 func (m UserModel) GetUserFromToken(tokenScope, tokenPlaintext string) (*User, error) {
 
-	// Hash of the plaintext token 
+	// Hash of the plaintext token
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 
 	// SQL query to get the user from token
@@ -233,15 +233,13 @@ func (m UserModel) GetUserFromToken(tokenScope, tokenPlaintext string) (*User, e
 	)
 	if err != nil {
 		switch {
-			case errors.Is(err, sql.ErrNoRows):
-				return nil, ErrNotFound
-			default:
-				return nil, err
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
 		}
 	}
 
 	// Return the user
 	return &user, nil
-	}
-
-
+}

@@ -11,9 +11,9 @@ import (
 )
 
 // Middleware to authenticate an user making the request
-func (app *application) authenticate( next httprouter.Handle) httprouter.Handle {
+func (app *application) authenticate(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		
+
 		// Add the "Vary: Authorization" header to the response
 		w.Header().Add("Vary", "Authorization")
 
@@ -46,9 +46,10 @@ func (app *application) authenticate( next httprouter.Handle) httprouter.Handle 
 		user, err := app.models.Users.GetUserFromToken(data.ScopeAuthentication, token)
 		if err != nil {
 			switch {
-				case errors.Is(err, data.ErrNotFound):
-					app.invalidAuthenticationTokenResponse(w, r)
-				default:app.serverErrorResponse(w, r, err)
+			case errors.Is(err, data.ErrNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
 			}
 			return
 		}
@@ -60,24 +61,24 @@ func (app *application) authenticate( next httprouter.Handle) httprouter.Handle 
 }
 
 // Middleware that checks if an user is authorized to make a request to an endpoint
-func (app *application) requireActivatedUser(next httprouter.Handle) httprouter.Handle{
-		return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// Get the user information from the request context
-			user := app.contextGetUser(r)
+func (app *application) requireActivatedUser(next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Get the user information from the request context
+		user := app.contextGetUser(r)
 
-			// Check if the user is not authenicated
-			if user.IsAnonymous() {
-				app.authenticationRequiredResponse(w, r)
-				return
-			}
+		// Check if the user is not authenicated
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
 
-			// Check if the user is not activated
-			if !user.Activated {
-				app.inactiveAccountResponse(w, r)
-				return
-			}
+		// Check if the user is not activated
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
 
-			next(w, r, ps)
+		next(w, r, ps)
 	}
 }
 
@@ -91,8 +92,8 @@ func (app *application) allowCORS(next httprouter.Handle) httprouter.Handle {
 		if origin != "" {
 			// Enable CORS for all origins
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			
-			// Check if the request is a pre-flight request 
+
+			// Check if the request is a pre-flight request
 			// If it is, set the necessary headers and send a 200 OK status back
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 				w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")

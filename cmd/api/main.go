@@ -20,15 +20,14 @@ const version = "1.0.0"
 // The config struct
 type config struct {
 	port int
-	env string
-	db struct{
-		dsn string
+	env  string
+	db   struct {
+		dsn          string
 		maxOpenConns int
 		maxIdleConns int
-		maxIdletime string
+		maxIdletime  string
 	}
 }
-
 
 // The application struct
 type application struct {
@@ -45,14 +44,14 @@ func main() {
 	// Set flags and their default values
 	flag.IntVar(&cfg.port, "port", 7001, "The API port")
 	flag.StringVar(&cfg.env, "env", "development", "Enviroment (development | staging | production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PARKOUR_DB_DSN"), "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connetions")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connetions")
 	flag.StringVar(&cfg.db.maxIdletime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 	flag.Parse()
 
 	// Logger function for customized logging
-	logger := log.New(os.Stdout, "", log.Ldate | log.Ltime)
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// Create a database connection pool
 	db, err := openDB(cfg)
@@ -65,7 +64,7 @@ func main() {
 	logger.Printf("Database connecton establisted")
 
 	// An instance of the application struct
-	app := &application {
+	app := &application{
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
@@ -73,10 +72,10 @@ func main() {
 
 	// An HTTP server
 	srv := http.Server{
-		Addr: fmt.Sprintf(":%d", cfg.port),
-		Handler: app.routes(),
-		IdleTimeout: time.Minute,
-		ReadTimeout: 10 * time.Second,
+		Addr:         fmt.Sprintf(":%d", cfg.port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 40 * time.Second,
 	}
 
@@ -109,7 +108,7 @@ func openDB(cfg config) (*sql.DB, error) {
 	db.SetConnMaxIdleTime(duration)
 
 	// Create a context with 5 second time out
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// reate a new connection with the context reatd above
