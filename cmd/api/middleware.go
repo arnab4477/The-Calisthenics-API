@@ -81,11 +81,27 @@ func (app *application) requireActivatedUser(next httprouter.Handle) httprouter.
 	}
 }
 
-// Middleware for enabling CORS
+// Middleware for enabling CORS and handle pre-flight request
 func (app *application) allowCORS(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		// Enable CORS for all origins
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			// Enable CORS for all origins
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			
+			// Check if the request is a pre-flight request 
+			// If it is, set the necessary headers and send a 200 OK status back
+			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+				w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+		}
 
 		next(w, r, ps)
 	}
