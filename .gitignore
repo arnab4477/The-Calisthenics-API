@@ -1,3 +1,6 @@
+.envrc
+.sql
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
