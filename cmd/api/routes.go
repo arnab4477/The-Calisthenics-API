@@ -18,17 +18,17 @@ func (app *application) routes() *httprouter.Router {
 
 	// Register the handlers for the /movements/ endpoints
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
-	router.GET("/v1/movements", app.getMovementsHandler)
-	router.GET("/v1/movements/:id", app.getOneMovementHandler)
+	router.GET("/v1/movements", app.allowCORS(app.getMovementsHandler))
+	router.GET("/v1/movements/:id", app.allowCORS(app.getOneMovementHandler))
 	
-	router.POST("/v1/movements", app.authenticate(app.requireActivatedUser(app.createMovementHandler)))
-	router.PUT("/v1/movements/:id", app.authenticate(app.requireActivatedUser(app.updateMovementHandler)))
-	router.DELETE("/v1/movements/:id", app.authenticate(app.requireActivatedUser(app.deleteMovementHandler)))
+	router.POST("/v1/movements", app.allowCORS(app.authenticate(app.requireActivatedUser(app.createMovementHandler))))
+	router.PUT("/v1/movements/:id", app.allowCORS(app.authenticate(app.requireActivatedUser(app.updateMovementHandler))))
+	router.DELETE("/v1/movements/:id", app.allowCORS(app.authenticate(app.requireActivatedUser(app.deleteMovementHandler))))
 
 	// Register the handlers for the /users/ endpoints
-	router.POST("/v1/users", app.registerUserHandler)
-	router.POST("/v1/users/activate", app.activateUserHandler)
-	router.POST("/v1/users/login", app.loginHandler)
+	router.POST("/v1/users", app.allowCORS(app.registerUserHandler))
+	router.POST("/v1/users/activate", app.allowCORS(app.activateUserHandler))
+	router.POST("/v1/users/login", app.allowCORS(app.loginHandler))
 
 	return router
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// Middleware to authenticate an user making the request
 func (app *application) authenticate( next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		
@@ -58,6 +59,7 @@ func (app *application) authenticate( next httprouter.Handle) httprouter.Handle 
 	}
 }
 
+// Middleware that checks if an user is authorized to make a request to an endpoint
 func (app *application) requireActivatedUser(next httprouter.Handle) httprouter.Handle{
 		return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			// Get the user information from the request context
@@ -76,5 +78,15 @@ func (app *application) requireActivatedUser(next httprouter.Handle) httprouter.
 			}
 
 			next(w, r, ps)
+	}
+}
+
+// Middleware for enabling CORS
+func (app *application) allowCORS(next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Enable CORS for all origins
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		next(w, r, ps)
 	}
 }
